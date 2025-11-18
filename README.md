@@ -58,39 +58,30 @@ make docker-run         # Run Docker locally
 
 ## Docker
 
+### From Docker Hub
+
+```bash
+# Pull the latest image
+docker pull sammylin/url_checker:latest
+
+# Run the container
+docker run -p 8080:8080 sammylin/url_checker:latest
+```
+
+### Build Locally
+
 ```bash
 docker build -t url-checker .
 docker run -p 8080:8080 url-checker
 ```
 
-## Deploy
-
-### GCP Cloud Run
+### Custom Port
 
 ```bash
-gcloud run deploy url-checker \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
+docker run -p 9000:8080 -e PORT=8080 sammylin/url_checker:latest
 ```
 
-### AWS App Runner
 
-```bash
-# Push to ECR
-aws ecr get-login-password --region us-east-1 | \
-  docker login --username AWS --password-stdin ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
-
-docker build -t url-checker .
-docker tag url-checker:latest ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/url-checker:latest
-docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/url-checker:latest
-
-# Create service
-aws apprunner create-service \
-  --service-name url-checker \
-  --source-configuration ImageRepository={ImageIdentifier=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/url-checker:latest,ImageRepositoryType=ECR}
-```
 
 ## API
 
