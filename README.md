@@ -22,6 +22,10 @@ With so many AI crawlers out there, websites often block requests. This tool hel
 - See SSL/TLS errors
 - Web UI included
 
+## Screenshot
+
+![URL Checker Interface](./screenshot.png)
+
 ## Quick Start
 
 ### Prerequisites
