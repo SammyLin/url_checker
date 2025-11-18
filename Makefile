@@ -1,12 +1,9 @@
-.PHONY: build run test test-coverage docker-build docker-run docker-push deploy-gcp help
+.PHONY: build run test test-coverage docker-build docker-run docker-push help
 
 # Variables
 BINARY_NAME=url-tester
 DOCKER_IMAGE=sammylin/url_checker
 DOCKER_TAG?=latest
-GCP_PROJECT?=your-gcp-project
-GCP_REGION?=asia-east1
-GCP_SERVICE_NAME=url-checker
 
 # Default target
 help:
@@ -22,9 +19,6 @@ help:
 	@echo "  make docker-build       - Build Docker image"
 	@echo "  make docker-run         - Run Docker container locally"
 	@echo "  make docker-push        - Push Docker image to registry"
-	@echo ""
-	@echo "Deployment:"
-	@echo "  make deploy-gcp         - Deploy to GCP Cloud Run"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make clean              - Remove compiled binary"
@@ -71,21 +65,6 @@ docker-push:
 	docker push $(DOCKER_IMAGE):$(DOCKER_TAG)
 	docker push $(DOCKER_IMAGE):latest
 	@echo "Docker image pushed successfully"
-
-# Deploy to GCP Cloud Run
-deploy-gcp:
-	@echo "Deploying to GCP Cloud Run..."
-	@if [ -z "$(GCP_PROJECT)" ] || [ "$(GCP_PROJECT)" = "your-gcp-project" ]; then \
-		echo "Error: GCP_PROJECT not set. Usage: make deploy-gcp GCP_PROJECT=your-project"; \
-		exit 1; \
-	fi
-	gcloud run deploy $(GCP_SERVICE_NAME) \
-		--source . \
-		--platform managed \
-		--region $(GCP_REGION) \
-		--allow-unauthenticated \
-		--project $(GCP_PROJECT)
-	@echo "Deployment complete"
 
 # Clean up
 clean:

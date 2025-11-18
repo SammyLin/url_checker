@@ -91,23 +91,40 @@ docker run -p 9000:8080 -e PORT=8080 sammylin/url_checker:latest
 
 ### POST /api/test
 
+Request:
 ```json
 {
   "url": "https://example.com"
 }
 ```
 
-Response:
+Response (Success):
 ```json
 {
-  "url": "https://example.com",
-  "status_code": 200,
-  "status": "200 OK",
-  "headers": {...},
-  "body": "...",
-  "response_time_ms": 234,
-  "final_url": "https://example.com/",
-  "blocked": false
+  "success": true,
+  "statusCode": 200,
+  "responseTime": 234,
+  "finalUrl": "https://example.com/",
+  "headers": {
+    "Content-Type": "text/html",
+    "Server": "nginx"
+  },
+  "bodyPreview": "<!DOCTYPE html>...",
+  "truncated": false,
+  "blocked": false,
+  "userIP": "1.2.3.4",
+  "serverIP": "5.6.7.8"
+}
+```
+
+Response (Error):
+```json
+{
+  "success": false,
+  "error": "DNS error: host not found",
+  "blocked": false,
+  "userIP": "1.2.3.4",
+  "serverIP": "5.6.7.8"
 }
 ```
 
@@ -130,22 +147,21 @@ curl -X POST http://localhost:8080/api/test \
 ```
 
 Look for:
-- `"status_code": 403` - Access forbidden
-- `"status_code": 429` - Rate limited
+- `"statusCode": 403` - Access forbidden
+- `"statusCode": 429` - Rate limited
 - `"blocked": true` - Detected as blocked
-- `"status": "403 Forbidden"` - Clear indication
 
 ### Check Redirects
 
 If a URL redirects, you'll see:
 ```json
 {
-  "final_url": "https://example.com/redirected",
-  "status_code": 200
+  "finalUrl": "https://example.com/redirected",
+  "statusCode": 200
 }
 ```
 
-Some sites redirect blocked requests to a login page. Check the `final_url` to see where you ended up.
+Some sites redirect blocked requests to a login page. Check the `finalUrl` to see where you ended up.
 
 ### Check SSL/TLS Issues
 

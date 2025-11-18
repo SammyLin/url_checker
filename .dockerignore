@@ -1,6 +1,7 @@
 # Git
 .git
 .gitignore
+.github
 
 # Documentation
 README.md
@@ -9,6 +10,7 @@ README.md
 # Development files
 .env
 .DS_Store
+.kiro
 
 # IDE
 .vscode
@@ -18,4 +20,5 @@ README.md
 *.exe
 *.test
 *.out
-main
+url-tester
+url-checker
