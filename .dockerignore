@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Development files
+.env
+.DS_Store
+
+# IDE
+.vscode
+.idea
+
+# Build artifacts
+*.exe
+*.test
+*.out
+main

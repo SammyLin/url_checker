@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto max-w-4xl px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🔍 URL Tester</h1>
+            <p class="text-lg text-gray-600">Test URL accessibility and retrieve detailed HTTP response information</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex gap-2 mb-4">
+                <input
+                    type="url"
+                    id="urlInput"
+                    placeholder="Enter a URL to test, e.g., https://example.com"
+                    class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 transition"
+                >
+                <button
+                    id="testButton"
+                    class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Test
+                </button>
+            </div>
+
+            <!-- IP Information (Always Visible) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                    <p class="text-xs uppercase text-blue-600 font-semibold mb-2">👤 Your IP</p>
+                    <p class="text-sm font-mono text-gray-800" id="userIPDisplay">-</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                    <p class="text-xs uppercase text-purple-600 font-semibold mb-2">🖥️ Server IP</p>
+                    <p class="text-sm font-mono text-gray-800" id="serverIPDisplay">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden bg-white rounded-lg shadow-lg p-6 mb-6 text-center">
+            <div class="inline-block">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+            <p class="mt-3 text-gray-600 font-semibold">Testing URL...</p>
+        </div>
+
+        <!-- Result Section -->
+        <div id="resultSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                <p class="text-red-700 font-semibold" id="errorText"></p>
+            </div>
+
+            <!-- Success Result -->
+            <div id="successResult" class="hidden">
+                <!-- Final URL at Top -->
+                <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-indigo-500 mb-6 cursor-pointer hover:bg-gray-100 transition group" id="finalUrlContainer" title="Click to copy">
+                    <p class="text-xs uppercase text-gray-600 font-semibold mb-2">Final URL</p>
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-sm font-mono text-gray-800 break-all flex-1" id="finalUrl">-</p>
+                        <span class="text-gray-400 group-hover:text-indigo-600 transition flex-shrink-0">📋</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 hidden group-hover:block" id="copyHint">Click to copy</p>
+                </div>
+
+                <!-- Status Badge -->
+                <div class="flex items-center gap-3 mb-6 pb-6 border-b-2 border-gray-200">
+                    <h2 class="text-2xl font-bold text-gray-800">Test Results</h2>
+                    <span id="statusBadge" class="px-4 py-2 rounded-full font-semibold text-sm"></span>
+                </div>
+
+                <!-- Blocked Warning -->
+                <div id="blockedWarning" class="hidden bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+                    <p class="text-yellow-700 font-semibold">⚠️ This website may have blocked your request (403/429)</p>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                        <p class="text-xs uppercase text-gray-600 font-semibold mb-1">Status Code</p>
+                        <p class="text-2xl font-bold text-gray-800" id="statusCode">-</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                        <p class="text-xs uppercase text-gray-600 font-semibold mb-1">Response Time</p>
+                        <p class="text-2xl font-bold text-gray-800" id="responseTime">-</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                        <p class="text-xs uppercase text-gray-600 font-semibold mb-1">Content Truncated</p>
+                        <p class="text-2xl font-bold text-gray-800" id="truncatedStatus">No</p>
+                    </div>
+                </div>
+
+                <!-- Headers Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">📋 HTTP Headers</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-indigo-600 text-white">
+                                    <th class="px-4 py-2 text-left font-semibold">Header Name</th>
+                                    <th class="px-4 py-2 text-left font-semibold">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="headersBody" class="bg-gray-50">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Body Preview Section -->
+                <div id="bodySection" class="hidden">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">📄 Response Body Preview</h3>
+                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-xs overflow-x-auto max-h-64 overflow-y-auto" id="bodyContent"></div>
+                    <p class="text-xs text-gray-600 mt-2" id="bodyTruncatedNote"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const testButton = document.getElementById('testButton');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        const successResult = document.getElementById('successResult');
+        const errorMessage = document.getElementById('errorMessage');
+
+        testButton.addEventListener('click', testURL);
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') testURL();
+        });
+
+        // Copy URL functionality
+        const finalUrlContainer = document.getElementById('finalUrlContainer');
+        finalUrlContainer.addEventListener('click', copyFinalUrl);
+
+        // Initialize IP information on page load
+        document.addEventListener('DOMContentLoaded', initializeIPInfo);
+
+        async function testURL() {
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            // Show loading
+            loading.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            testButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                showError('Request failed: ' + error.message);
+            } finally {
+                loading.classList.add('hidden');
+                testButton.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            resultSection.classList.remove('hidden');
+            successResult.classList.add('hidden');
+            errorMessage.classList.remove('hidden');
+            document.getElementById('errorText').textContent = message;
+        }
+
+        function displayResults(data) {
+            resultSection.classList.remove('hidden');
+
+            if (!data.success) {
+                // Error case
+                successResult.classList.add('hidden');
+                errorMessage.classList.remove('hidden');
+                document.getElementById('errorText').textContent = data.error || 'Unknown error';
+                return;
+            }
+
+            // Success case
+            successResult.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+
+            // Status badge
+            const statusBadge = document.getElementById('statusBadge');
+            const statusCode = data.statusCode;
+            if (statusCode >= 200 && statusCode < 300) {
+                statusBadge.textContent = '✅ Success';
+                statusBadge.className = 'px-4 py-2 rounded-full font-semibold text-sm bg-green-100 text-green-800';
+            } else if (statusCode >= 300 && statusCode < 400) {
+                statusBadge.textContent = '🔄 Redirect';
+                statusBadge.className = 'px-4 py-2 rounded-full font-semibold text-sm bg-yellow-100 text-yellow-800';
+            } else if (statusCode >= 400 && statusCode < 500) {
+                statusBadge.textContent = '❌ Client Error';
+                statusBadge.className = 'px-4 py-2 rounded-full font-semibold text-sm bg-orange-100 text-orange-800';
+            } else {
+                statusBadge.textContent = '❌ Server Error';
+                statusBadge.className = 'px-4 py-2 rounded-full font-semibold text-sm bg-red-100 text-red-800';
+            }
+
+            // Blocked warning
+            const blockedWarning = document.getElementById('blockedWarning');
+            if (data.blocked) {
+                blockedWarning.classList.remove('hidden');
+            } else {
+                blockedWarning.classList.add('hidden');
+            }
+
+            // Info cards
+            document.getElementById('statusCode').textContent = data.statusCode || '-';
+            document.getElementById('responseTime').textContent = data.responseTime ? `${data.responseTime} ms` : '-';
+            document.getElementById('finalUrl').textContent = data.finalUrl || '-';
+            document.getElementById('truncatedStatus').textContent = data.truncated ? 'Yes' : 'No';
+
+            // Update IP information in header
+            document.getElementById('userIPDisplay').textContent = data.userIP || '-';
+            document.getElementById('serverIPDisplay').textContent = data.serverIP || '-';
+
+            // Headers
+            const headersBody = document.getElementById('headersBody');
+            headersBody.innerHTML = '';
+
+            if (data.headers && Object.keys(data.headers).length > 0) {
+                Object.entries(data.headers).forEach(([key, value]) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 hover:bg-gray-100';
+                    row.innerHTML = `
+                        <td class="px-4 py-2 font-semibold text-gray-700">${escapeHtml(key)}</td>
+                        <td class="px-4 py-2 text-gray-600">${escapeHtml(value)}</td>
+                    `;
+                    headersBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2" class="px-4 py-2 text-gray-500 text-center">No headers</td>';
+                headersBody.appendChild(row);
+            }
+
+            // Body preview
+            const bodySection = document.getElementById('bodySection');
+            if (data.bodyPreview) {
+                bodySection.classList.remove('hidden');
+                document.getElementById('bodyContent').textContent = data.bodyPreview;
+                const bodyTruncatedNote = document.getElementById('bodyTruncatedNote');
+                if (data.truncated) {
+                    bodyTruncatedNote.textContent = '⚠️ Content truncated to 1000 characters';
+                } else {
+                    bodyTruncatedNote.textContent = '';
+                }
+            } else {
+                bodySection.classList.add('hidden');
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        async function copyFinalUrl() {
+            const finalUrlElement = document.getElementById('finalUrl');
+            const urlText = finalUrlElement.textContent.trim();
+
+            if (urlText === '-' || !urlText) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(urlText);
+                
+                // Show feedback
+                const container = document.getElementById('finalUrlContainer');
+                const originalBg = container.className;
+                container.classList.add('bg-green-100');
+                
+                const hint = document.getElementById('copyHint');
+                const originalText = hint.textContent;
+                hint.textContent = '✅ Copied!';
+                hint.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    container.className = originalBg;
+                    hint.textContent = originalText;
+                    hint.classList.add('hidden');
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+                alert('Copy failed, please copy manually');
+            }
+        }
+
+        async function initializeIPInfo() {
+            try {
+                const response = await fetch('/api/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: 'http://example.com' })
+                });
+
+                const data = await response.json();
+                
+                // Update IP displays
+                document.getElementById('userIPDisplay').textContent = data.userIP || '-';
+                document.getElementById('serverIPDisplay').textContent = data.serverIP || '-';
+            } catch (error) {
+                console.error('Failed to load IP info:', error);
+                document.getElementById('userIPDisplay').textContent = 'Unable to fetch';
+                document.getElementById('serverIPDisplay').textContent = 'Unable to fetch';
+            }
+        }
+    </script>
+</body>
+</html>
